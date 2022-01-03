@@ -45,7 +45,7 @@
     "link"
   ],
   "dependencies": {
-    "mongodb": "^3.0.0-rc0"
+    "mongodb": "^4.2.2"
   },
   "devDependencies": {
     "coveralls": "^3.0.0",
