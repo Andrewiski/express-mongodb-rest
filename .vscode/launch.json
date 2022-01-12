@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "env": {
+                "MONGODB_CONNECTION":"mongodb://m2Example:M23xample1@127.0.0.1:27017",
+                "MONGODB_DATABASE":"test",
+                "MONGODB_COLLECTION":"test",
+                "MONGODB_TESTALLOWDATABASE": "test"
+            },
+            "command": "node ./tests/test.js",
+            "name": "Run tests/test.js ",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+
+        
+        
+    ]
+}

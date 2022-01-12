@@ -38,38 +38,51 @@ var defaultHandler = function(req, res, next, data) {
 	
 	// (default_handler_call) Handle common MongoDB functions
 	var keys;
-	if (method == 'find' || method == 'findOne') {
-		
+	if (method == 'find' || method == 'findOne') {		
 		// (default_handler_call_find) MongoDB Find
-		collection[method](query.q, query.options, function(err, cursor) {
-			if (err) next(err);
-			cursor.toArray(function(err, docs) {
-				if (err) next(err);
+		collection[method](query.q, query.options).toArray().then(
+			function(docs) {
 				res.json(docs);
-			});
-		});
+			},
+			function(err){
+				next(err);
+			}
+		);
+		
 	} else if (method == 'insertMany' || method == 'insertOne') {
 		
 		// (default_handler_call_insert) MongoDB insert
-		collection[method](query.docs, query.options, function(err) {
-			if (err) next(err);
-			res.json({status: 'success', code: 200});
-		});
+		collection[method](query.docs, query.options).then(
+			function(results) {
+			
+				res.json({status: 'success', code: 200, results: results});
+			},
+			function(err){
+				next(err);
+			}
+		);
 	} else if (method == 'updateMany' || method == 'updateOne') {
 		
 		// (default_handler_call_update) MongoDB update
-		collection[method](query.q, query.update, function(err) {
-			if (err) next(err);
-			res.json({status: 'success', code: 200});
-		});
+		collection[method](query.q, query.update).then(
+			function(results) {
+				res.json({status: 'success', code: 200, results: results});
+			},
+			function(err){
+				next(err);
+			}
+		);
 	} else if (method == 'deleteMany' || method == 'deleteOne') {
 		
 		// (default_handler_call_delete) MongoDB delete
-		collection[method](query.q, function(err) {
-			if (err) next(err);
-			if (err) next(err);
-			res.json({status: 'success', code: 200});
-		});
+		collection[method](query.q).then(
+			function(results) {
+				res.json({status: 'success', code: 200, results:results});
+			},
+			function(err){
+				next(err);
+			}
+		);
 	}
 };
 
@@ -313,17 +326,22 @@ module.exports = function(options) {
 	
 	// (mongodb) Connect to mongodb using connection pooling
 	var Client;
-	mongoClient.connect(options.mongodb.connection, options.mongodb.options, function(err, client) {
-		Client = client;
-	});
+	mongoClient.connect(options.mongodb.connection, options.mongodb.options).then(
+		function(client) {
+			Client = client;
+		},
+		function(err) {
+			throw err;
+		},
+	);
 	
 	// (middleware) Express middleware function 
 	var middleware = function(req, res, next) {
 		
 		// (middleware_options) Setup REST 
 		var rest = options.rest[req.method];
-		rest.database = req.params[options.express.database] || rest.database;
-		rest.collection = req.params[options.express.collection]|| rest.collection;
+		rest.database = req.params[options.express.database] || rest.database ||  options.mongodb.database;
+		rest.collection = req.params[options.express.collection]|| rest.collection ||  options.mongodb.collection;
 		rest.method = req.params[options.express.method] || rest.method;
 		if (Object.keys(req.query).length > 0) {
 			rest.query = req.query;

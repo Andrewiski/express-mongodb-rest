@@ -1,0 +1,29 @@
+TAP version 13
+# Tests for express-mongodb-rest (3.2.0)
+# Node.js (v16.13.1)
+# Description: Express middleware for MongoDB REST APIs
+# Date: 2022-01-12 12:33:26
+# Dependencies: mongodb (^4.2.2)
+# Developer: coveralls (^3.0.0), documentation (^5.3.3), dotenv (^4.0.0), express (^4.16.2), express-query-int (^2.0.0), istanbul (^0.4.5), moment (^2.19.1), supertest (^3.0.0), tape (^4.8.0)
+ok 1 (MAIN) insertMany
+ok 2 (MAIN) MongoDB connect
+# (A) tests on app response
+ok 3 (A) base app GET 200 success
+ok 4 (A) REST GET 200 success
+ok 5 (A) REST POST 200 success
+ok 6 (A) REST PUT 200 success
+ok 7 (A) REST DELETE 200 success
+not ok 8 (A) custom GET 200 success: expected 200 "OK", got 400 "Bad Request"
+  ---
+    operator: fail
+    at: <anonymous> (C:\Users\adevries\source\repos\andrewiski\express-mongodb-rest\tests\test.js:331:9)
+    stack: |-
+      Error: (A) custom GET 200 success: expected 200 "OK", got 400 "Bad Request"
+          at Test.assert [as _assert] (C:\Users\adevries\source\repos\andrewiski\express-mongodb-rest\node_modules\tape\lib\test.js:274:54)
+          at Test.bound [as _assert] (C:\Users\adevries\source\repos\andrewiski\express-mongodb-rest\node_modules\tape\lib\test.js:88:32)
+          at Test.fail (C:\Users\adevries\source\repos\andrewiski\express-mongodb-rest\node_modules\tape\lib\test.js:367:10)
+          at Test.bound [as fail] (C:\Users\adevries\source\repos\andrewiski\express-mongodb-rest\node_modules\tape\lib\test.js:88:32)
+          at C:\Users\adevries\source\repos\andrewiski\express-mongodb-rest\tests\test.js:331:9
+          at processTicksAndRejections (node:internal/process/task_queues:96:5)
+  ...
+ok 9 (MAIN) Drop MongoDB database

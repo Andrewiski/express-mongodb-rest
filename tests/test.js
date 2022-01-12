@@ -93,7 +93,9 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 	t.comment('Date: ' + moment().format('YYYY-MM-DD hh:mm:ss'));
 	t.comment('Dependencies: ' + testedPackages.join(', '));
 	t.comment('Developer: ' + devPackages.join(', '));
-	process.env.MONGODB_DATABASE = process.env.MONGODB_TESTDATABASE;
+	if(process.env.MONGODB_TESTDATABASE){
+		process.env.MONGODB_DATABASE = process.env.MONGODB_TESTDATABASE;
+	}
 	
 	// (test_connect) Connect to mongodb
 	Client.connect(process.env.MONGODB_CONNECTION, function(err, client) {
@@ -106,6 +108,8 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 			mongoEnd(db, client, t);
 		}
 		
+
+
 		// (test_insert) Insert test data
 		return collection.insertMany([{a:1.00, b: 'b', c: 'a', d: -1.00}, {a: -1.00, b: 'a', c: 'b', d: 10.00}, {a: 10.00, b: 'c', c: 'b', d: 1.00}])
 			.then(res => {
@@ -119,12 +123,16 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_app_rest) Create REST app
 				var restApp = express();
-				options = {mongodb: {}, rest: {}};
+				options = {mongodb: {}, rest: {}, test: {}};
 				options.mongodb = {
 					connection: process.env.MONGODB_CONNECTION,
 					database: process.env.MONGODB_DATABASE,
 					collection: process.env.MONGODB_COLLECTION
 				};
+				options.test = {
+					testAllowDB: process.env.MONGODB_TESTALLOWDATABASE || "expressmongodbrest_database",
+					collection: process.env.MONGODB_COLLECTION
+				}
 				options.rest.GET = {
 					database: process.env.MONGODB_DATABASE,
 					collection: process.env.MONGODB_COLLECTION,
@@ -151,13 +159,13 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 							code: 400
 						},
 						allow: {
-							database: ['expressmongodbrest_database'],
+							database: [options.test.testAllowDB],
 							collection: ['rest_data', 'unknown_collection'],
 							code: 400
 						}
 					},
 					mongodb: {
-						options: {poolSize: 10}
+						options: { maxPoolSize: 100}
 					},
 					rest: {
 						GET: {
@@ -310,7 +318,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_200) Test custom GET response 200
 				return request(app.custom)
-					.get('/custom/expressmongodbrest_database/rest_data/find')
+					.get('/custom/' + options.test.testAllowDB + '/' + options.test.collection + '/find')
 					.expect(200)
 					.then(res => {
 						
@@ -331,7 +339,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_deny_database_400) Test custom GET deny database response 400
 				return request(app.custom)
-					.get('/custom/deny/rest_data/find')
+					.get('/custom/deny/rest/find')
 					.expect(400)
 					.then(res => {
 						
@@ -352,7 +360,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_deny_collection_400) Test custom GET deny collection response 400
 				return request(app.custom)
-					.get('/custom/expressmongodbrest_database/deny/find')
+					.get('/custom/' + options.test.testAllowDB + '/deny/find')
 					.expect(400)
 					.then(res => {
 						
@@ -373,7 +381,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_allow_database_400) Test custom GET not allow database response 400
 				return request(app.custom)
-					.get('/custom/notallowed/rest_data/find')
+					.get('/custom/notallowed/' + options.test.collection + '/find')
 					.expect(400)
 					.then(res => {
 						
@@ -394,7 +402,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_allow_collection_400) Test custom GET not allow collection response 400
 				return request(app.custom)
-					.get('/custom/expressmongodbrest_database/allow/find')
+					.get('/custom/' + options.test.testAllowDB + '/allow/find')
 					.expect(400)
 					.then(res => {
 						
@@ -642,11 +650,14 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 						return app;
 					});
 			})
+
+
+
 			.then(app => {
 				
 				// (test_custom_get) Test custom GET
 				return request(app.custom)
-					.get('/custom/expressmongodbrest_database/rest_data/find?q={}')
+					.get('/custom/' + options.test.testAllowDB + '/' + options.test.collection + 'a/find?q={}')
 					.then(res => {
 						t.comment('(D) tests on custom app');
 						
@@ -670,7 +681,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_query) Test custom GET query
 				return request(app.custom)
-					.get('/custom/expressmongodbrest_database/rest_data/find?q={"lvl":{"$gt":9000}}')
+					.get('/custom/' + options.test.testAllowDB + '/' + options.test.collection + '/find?q={"lvl":{"$gt":9000}}')
 					.then(res => {
 						
 						// (test_custom_get_query_pass) Pass custom GET query
@@ -693,7 +704,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_collection) Test custom GET unknown collection
 				return request(app.custom)
-					.get('/custom/expressmongodbrest_database/unknown_collection/find?q={"lvl":{"$gt":9000}}')
+					.get('/custom/' + options.test.testAllowDB + '/unknown_collection/find?q={"lvl":{"$gt":9000}}')
 					.then(res => {
 						
 						// (test_custom_get_collection_pass) Pass custom GET unknown collection
@@ -716,7 +727,7 @@ test('Tests for ' + json.name + ' (' + json.version + ')', t => {
 				
 				// (test_custom_get_count) Test custom GET count
 				return request(app.custom)
-					.get('/custom/expressmongodbrest_database/rest_data/count')
+					.get('/custom/' + options.test.testAllowDB + '/' + options.test.collection + '/count')
 					.then(res => {
 						
 						// (test_custom_get_count_pass) Pass custom GET count
